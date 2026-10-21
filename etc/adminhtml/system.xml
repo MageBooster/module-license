@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_file.xsd">
+    <system>
+        <tab id="magebooster" translate="label" sortOrder="400">
+            <label>MageBooster</label>
+        </tab>
+        <section id="magebooster_license" translate="label" sortOrder="10" showInDefault="1">
+            <label>Licenses</label>
+            <tab>magebooster</tab>
+            <resource>MageBooster_License::config</resource>
+            <group id="serials" translate="label comment" sortOrder="10" showInDefault="1">
+                <label>Serial numbers</label>
+                <comment>Paid MageBooster features need a serial number for your store domain(s). Free MageBooster modules work without one.</comment>
+                <field id="currency_rates" translate="label comment" type="text" sortOrder="10" showInDefault="1">
+                    <label>Currency Rates (TCMB)</label>
+                    <comment>Serial number, starts with MB1. The status is shown in the admin notices.</comment>
+                </field>
+                <field id="checkout_pro" translate="label comment" type="text" sortOrder="20" showInDefault="1">
+                    <label>MageBooster Checkout Pro</label>
+                    <comment>Serial number, starts with MB1.</comment>
+                </field>
+            </group>
+        </section>
+    </system>
+</config>

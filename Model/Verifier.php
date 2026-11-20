@@ -24,7 +24,7 @@ namespace MageBooster\License\Model;
 class Verifier
 {
     /** Public key (base64) of the MageBooster serial signing key. Replace with the production key before release. */
-    public const PUBLIC_KEY = 'L5Z+5u/LM4mjqyy+rrNR1Cs9GAXhcnrUSpqMmD+wN5Q=';
+    public const PUBLIC_KEY = 'iUPaypR8QVrKmRcutDEhN6hdURJFzzOBTHg7qT1dxCg=';
     public const GRACE_DAYS = 14;
 
     /**

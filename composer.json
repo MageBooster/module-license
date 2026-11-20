@@ -2,7 +2,28 @@
     "name": "magebooster/module-license",
     "description": "MageBooster serial-number (license) checks for paid MageBooster extensions. Offline Ed25519 verification.",
     "type": "magento2-module",
+    "keywords": [
+        "magento2",
+        "magento-2-module",
+        "hyva",
+        "luma",
+        "license",
+        "serial-number",
+        "ed25519",
+        "magebooster"
+    ],
+    "homepage": "https://magebooster.com",
     "license": "proprietary",
+    "authors": [
+        {
+            "name": "WebWorks 101 OÜ",
+            "homepage": "https://magebooster.com"
+        }
+    ],
+    "support": {
+        "email": "info@magebooster.com",
+        "docs": "https://github.com/MageBooster/module-license/blob/main/docs/HOWTO.en.md"
+    },
     "require": {
         "php": ">=8.0",
         "ext-sodium": "*",

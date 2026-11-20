@@ -25,7 +25,7 @@ class LicenseMessage implements MessageInterface
 
     public function getIdentity()
     {
-        return 'magebooster_license_' . md5(implode('|', array_keys($this->getProblems())));
+        return 'magebooster_license_' . hash('sha256', implode('|', array_keys($this->getProblems())));
     }
 
     public function isDisplayed()
@@ -37,7 +37,7 @@ class LicenseMessage implements MessageInterface
     {
         $lines = [];
         foreach ($this->getProblems() as $label => $status) {
-            $lines[] = sprintf('<strong>%s</strong>: %s', htmlspecialchars($label), htmlspecialchars($status->getMessage()));
+            $lines[] = sprintf('<strong>%s</strong>: %s', htmlspecialchars($label, ENT_QUOTES | ENT_SUBSTITUTE), htmlspecialchars($status->getMessage(), ENT_QUOTES | ENT_SUBSTITUTE));
         }
         return implode('<br>', $lines) . sprintf(
             '<br><a href="%s">%s</a>',

@@ -17,9 +17,9 @@ class Status
     public const WRONG_DOMAIN = 'wrong_domain';
 
     public function __construct(
-        private readonly string $code,
-        private readonly string $message,
-        private readonly ?string $expires = null
+        private string $code,
+        private string $message,
+        private ?string $expires = null
     ) {
     }
 

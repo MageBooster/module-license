@@ -17,9 +17,9 @@ class LicenseMessage implements MessageInterface
     private ?array $problems = null;
 
     public function __construct(
-        private readonly LicenseInterface $license,
-        private readonly Products $products,
-        private readonly UrlInterface $url
+        private LicenseInterface $license,
+        private Products $products,
+        private UrlInterface $url
     ) {
     }
 

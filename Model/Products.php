@@ -12,7 +12,7 @@ class Products
     /**
      * @param array<string, string> $products product code => label
      */
-    public function __construct(private readonly array $products = [])
+    public function __construct(private array $products = [])
     {
     }
 

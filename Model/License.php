@@ -15,9 +15,9 @@ class License implements LicenseInterface
     private array $cache = [];
 
     public function __construct(
-        private readonly ScopeConfigInterface $scopeConfig,
-        private readonly StoreManagerInterface $storeManager,
-        private readonly Verifier $verifier
+        private ScopeConfigInterface $scopeConfig,
+        private StoreManagerInterface $storeManager,
+        private Verifier $verifier
     ) {
     }
 

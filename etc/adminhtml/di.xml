@@ -18,4 +18,13 @@
             </argument>
         </arguments>
     </type>
+    <type name="Magento\AdminNotification\Block\System\Messages">
+        <plugin name="magebooster_license_links" type="MageBooster\License\Plugin\SystemMessagesLinks"/>
+    </type>
+    <type name="Magento\AdminNotification\Ui\Component\DataProvider\DataProvider">
+        <plugin name="magebooster_license_links" type="MageBooster\License\Plugin\NotificationAreaLinks"/>
+    </type>
+    <type name="Magento\AdminNotification\Block\System\Messages\UnreadMessagePopup">
+        <plugin name="magebooster_license_links" type="MageBooster\License\Plugin\SystemMessagesLinks"/>
+    </type>
 </config>

@@ -19,17 +19,16 @@
             <label>Licenses</label>
             <tab>magebooster</tab>
             <resource>MageBooster_License::config</resource>
+            <group id="status" translate="label" sortOrder="5" showInDefault="1">
+                <label>License status</label>
+                <field id="overview" translate="label" sortOrder="10" showInDefault="1">
+                    <label>Status</label>
+                    <frontend_model>MageBooster\License\Block\Adminhtml\System\Config\Overview</frontend_model>
+                </field>
+            </group>
             <group id="serials" translate="label comment" sortOrder="10" showInDefault="1">
                 <label>Serial numbers</label>
-                <comment>Paid MageBooster features need a serial number for your store domain(s). Free MageBooster modules work without one.</comment>
-                <field id="currency_rates" translate="label comment" type="text" sortOrder="10" showInDefault="1">
-                    <label>Currency Rates (TCMB)</label>
-                    <comment>Serial number, starts with MB1. The status is shown in the admin notices.</comment>
-                </field>
-                <field id="checkout_pro" translate="label comment" type="text" sortOrder="20" showInDefault="1">
-                    <label>MageBooster Checkout Pro</label>
-                    <comment>Serial number, starts with MB1.</comment>
-                </field>
+                <comment><![CDATA[Paid MageBooster modules need a serial number for your store domain(s). Without a valid serial number a module keeps working for 30 days, then its paid function switches off. Development hosts (localhost, *.localhost, *.test, *.local, 127.0.0.1) always pass the domain check. Your serial numbers: <a href="https://store.magebooster.com/licences/account/" target="_blank" rel="noopener">store.magebooster.com/licences/account</a>]]></comment>
             </group>
         </section>
     </system>

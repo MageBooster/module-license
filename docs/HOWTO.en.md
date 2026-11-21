@@ -15,10 +15,10 @@ It runs inside your store and works offline: it makes no call to any MageBooster
   - A `www.` variant of a licensed domain is accepted automatically.
   - A wildcard such as `*.example.com` covers subdomains.
 - Development hosts always pass the domain check: `localhost`, `127.0.0.1`, `*.test`, `*.localhost` and `*.local`.
-- After the expiry date, there is a 14-day grace period. During it the product keeps working and a warning is shown.
-- When a serial has a problem, an admin notice appears with a link to the Licenses page.
+- Without a valid serial, a module keeps working for a 30-day grace period. After that it stops its paid function, without breaking the store.
+- While a module has no valid serial, every admin page shows a notice that cannot be dismissed, with links to the Licenses page and to your serial numbers. Shoppers never see it.
 
-Other paid modules (for example CurrencyRates) depend on this module.
+All paid MageBooster modules depend on this module.
 
 ## Requirements
 
@@ -55,43 +55,73 @@ The `setup:di:compile` and `setup:static-content:deploy` steps are only needed i
 
 ## Admin configuration
 
-Go to **Stores > Configuration > MageBooster > Licenses**, group **Serial numbers**.
-To open this page, an admin user needs the ACL resource `MageBooster_License::config`.
+Go to **Stores > Configuration > MageBooster > Licenses**. To open this page, an admin user needs the ACL resource `MageBooster_License::config`.
 
-| Field | Config path | What it means |
-|---|---|---|
-| Currency Rates (TCMB) | `magebooster_license/serials/currency_rates` | Serial for the CurrencyRates module. It starts with `MB1`. |
-| MageBooster Checkout Pro | `magebooster_license/serials/checkout_pro` | Serial for the Checkout module. It starts with `MB1`. |
+**License status** lists every installed paid MageBooster module:
 
-Under each field you will see the current status of that serial:
+| Status | Meaning |
+|---|---|
+| Active | A valid serial covers the module. |
+| Grace period | No valid serial yet. The module keeps working; the details column shows the reason and the days left. |
+| Switched off | The 30-day grace period has ended. The module has stopped its paid function; the store keeps working. |
 
-| Status | Message | Does the product work? |
-|---|---|---|
-| valid | Valid until <date> | Yes |
-| grace | Expired, still in the grace period, with a warning | Yes, for 14 days |
-| missing | Enter your serial number. | No |
-| invalid | The serial number is not valid. | No |
-| expired | Expired, and the grace period has ended | No |
-| wrong_product | This serial number is for another MageBooster product. | No |
-| wrong_domain | The serial number does not cover the domain <host> | No |
+**Serial numbers** has one field per installed module, plus one for its Hyvä edition (for example **Moka United payments** and **Moka United payments (Hyvä edition)**). Fill in the one you bought. Config path: `magebooster_license/serials/<code>`, for example `magebooster_license/serials/moka` and `magebooster_license/serials/moka_hyva`.
+
+The reason shown for a module without a valid serial is one of:
+
+| Reason | Message |
+|---|---|
+| missing | No serial number has been entered. |
+| invalid | The serial number is not valid. |
+| expired | The serial number expired on <date>. |
+| wrong_product | This serial number is for another MageBooster product. |
+| wrong_domain | This serial number does not cover the domain <host>. |
+
+### Grace period and admin notice
+
+- Without a valid serial, a module keeps working for **30 days**. The 30 days start the first time License sees the module without a valid serial, and are stored per module.
+- The grace period is never restarted by itself. A valid serial ends it; if that serial later stops being valid (for example it expires), a new 30-day period starts.
+- During and after the grace period, every admin page shows a system message that cannot be dismissed. It lists each affected module with the reason and "keeps working for X more day(s)" or "switched off since <date>", and links to the Licenses page and to https://store.magebooster.com/licences/account/.
+- Shoppers never see a licence message.
+- What "switched off" means is described in each module's guide. It never breaks the storefront: payment methods are hidden, MageBooster Checkout falls back to the standard checkout, and so on.
+
+On the command line, `bin/magento magebooster:license:status` prints the same status table.
 
 ## Entering a serial
 
 1. Copy the serial from your MageBooster order email.
-2. Paste it into the matching field. The serial looks like `MB1.xxxxx.yyyyy`.
+2. Paste it into the field of that module (or its Hyvä edition). The serial looks like `MB1.xxxxx.yyyyy`.
 3. Click **Save Config**.
-4. Check the status line under the field.
+4. Check **License status**: the module should show **Active**.
 
 ## For developers
 
-To check a product's licence from your own code, inject `MageBooster\License\Api\LicenseInterface` and call one of its methods:
+To check a module's licence from your own code, inject `MageBooster\License\Api\LicenseInterface`:
 
 ```php
-$this->license->isValid('currency-rates'); // true for valid or grace
-$this->license->getStatus('currency-rates'); // status object
+$this->license->isActive('moka');        // true when licensed or still in the grace period
+$state = $this->license->getModuleState('moka');
+$state->isValid();      // a valid serial covers it
+$state->isInGrace();    // no valid serial, grace period running
+$state->getDaysLeft();  // days left in the grace period
+$state->getStatus();    // the serial check result (code and message)
 ```
 
-To register a new product code, add an item to the `products` argument of `MageBooster\License\Model\Products` in your module's `di.xml`.
+`isValid()` on the interface is kept for older modules and now returns the same as `isActive()`.
+
+To register a module, add an item to the `products` argument of `MageBooster\License\Model\Products` in your module's `di.xml`. The item key is the module code; `codes` lists the product codes whose serials are accepted (the Hyvä edition code is accepted by the base module):
+
+```xml
+<item name="moka" xsi:type="array">
+    <item name="label" xsi:type="string">Moka United payments</item>
+    <item name="codes" xsi:type="array">
+        <item name="moka" xsi:type="string">moka</item>
+        <item name="moka-hyva" xsi:type="string">moka-hyva</item>
+    </item>
+</item>
+```
+
+The grace start dates are stored in the `flag` table, flag code `magebooster_license_grace` (JSON, module code => start time in UTC).
 
 The serial format is `MB1.<base64url payload>.<base64url signature>`. The payload is JSON with these keys:
 
@@ -102,15 +132,16 @@ The serial format is `MB1.<base64url payload>.<base64url signature>`. The payloa
 
 ## Testing
 
-1. Leave a serial field empty and save. The status should read "Enter your serial number."
-2. Paste a valid serial and save. The status should read "Valid until ...".
-3. On a development host such as `shop.test`, the domain check is skipped. To test the domain check, use a real host.
+1. Leave a serial field empty and save. **License status** should show **Grace period** with "No serial number has been entered." and 30 days left, and the admin notice should appear.
+2. Paste a valid serial and save. The status should change to **Active** and the module should disappear from the admin notice.
+3. Run `bin/magento magebooster:license:status` to see the same result on the command line.
+4. On a development host such as `shop.test`, the domain check is skipped. To test the domain check, use a real host.
 
 ## Troubleshooting
 
 - **"The serial number is not valid."** Make sure the serial was copied in full, with no spaces or line breaks.
 - **"does not cover the domain ..."** One of your store views uses a base URL that the serial does not cover. Check every store view's base URL. A serial can be reissued for the correct domains.
-- **"This serial number is for another MageBooster product."** The serial was pasted into the wrong field.
+- **"This serial number is for another MageBooster product."** The serial was pasted into the wrong field, or the serial was bought for another module.
 - **Error about `sodium`.** Enable the PHP `sodium` extension.
 
 ## Uninstall

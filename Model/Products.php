@@ -15,23 +15,65 @@ declare(strict_types=1);
 namespace MageBooster\License\Model;
 
 /**
- * Paid products that need a serial. Each paid module adds itself in its own di.xml:
- * <argument name="products"><item name="currency-rates" xsi:type="string">Currency Rates (TCMB)</item></argument>
+ * Paid modules that need a serial. Each paid module registers itself in its own di.xml:
+ *
+ * <type name="MageBooster\License\Model\Products"><arguments><argument name="products" xsi:type="array">
+ *     <item name="moka" xsi:type="array">
+ *         <item name="label" xsi:type="string">Moka United payments</item>
+ *         <item name="codes" xsi:type="array">
+ *             <item name="moka" xsi:type="string">moka</item>
+ *             <item name="moka-hyva" xsi:type="string">moka-hyva</item>
+ *         </item>
+ *     </item>
+ * </argument></arguments></type>
+ *
+ * A plain string item (code => label, the 1.0 format) is still accepted and stands for one code.
  */
 class Products
 {
     /**
-     * @param array<string, string> $products product code => label
+     * @param array<string, string|array{label?: string, codes?: array<string, string>}> $products
      */
     public function __construct(private array $products = [])
     {
     }
 
     /**
-     * @return array<string, string>
+     * @return array<string, string> module code => label
      */
     public function getAll(): array
     {
-        return $this->products;
+        $all = [];
+        foreach ($this->products as $code => $item) {
+            $all[(string)$code] = is_array($item) ? (string)($item['label'] ?? $code) : (string)$item;
+        }
+        return $all;
+    }
+
+    public function has(string $module): bool
+    {
+        return isset($this->products[$module]);
+    }
+
+    public function getLabel(string $module): string
+    {
+        return $this->getAll()[$module] ?? $module;
+    }
+
+    /**
+     * Serial product codes accepted for a module: the module code first, then its editions (e.g. -hyva).
+     *
+     * @return string[]
+     */
+    public function getCodes(string $module): array
+    {
+        $codes = [$module];
+        $item = $this->products[$module] ?? null;
+        if (is_array($item) && isset($item['codes']) && is_array($item['codes'])) {
+            foreach ($item['codes'] as $code) {
+                $codes[] = (string)$code;
+            }
+        }
+        return array_values(array_unique($codes));
     }
 }

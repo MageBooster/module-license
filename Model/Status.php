@@ -15,7 +15,8 @@ declare(strict_types=1);
 namespace MageBooster\License\Model;
 
 /**
- * Result of a serial check. VALID and GRACE both unlock the product; GRACE also shows a warning.
+ * Result of a serial check of one product code. Since 1.1.0 the verifier no longer returns GRACE;
+ * the grace period is handled per module by License::isActive().
  */
 class Status
 {

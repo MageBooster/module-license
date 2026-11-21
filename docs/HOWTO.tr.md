@@ -14,10 +14,10 @@ License, ücretli MageBooster ürünlerinin seri numaralarını kontrol eder. Ko
   - Lisanslı alan adının `www.` ile başlayan hali kendiliğinden kabul edilir.
   - `*.ornek.com` gibi bir yazım tüm alt alan adlarını kapsar.
 - **Geliştirme ortamları:** `localhost`, `127.0.0.1`, `*.test`, `*.localhost` ve `*.local` adresleri alan adı kontrolüne takılmaz.
-- **Ek süre:** Bitiş tarihinden sonra 14 günlük ek süre vardır. Bu sürede ürün çalışmaya devam eder, yalnızca uyarı gösterilir.
-- **Uyarı:** Bir seri numarasında sorun varsa yönetim panelinde bir bildirim çıkar. Bildirim sizi Lisanslar sayfasına götürür.
+- **Ek süre:** Geçerli seri numarası yoksa modül 30 gün çalışmaya devam eder. Sonra ücretli işlevi durur, mağaza bozulmaz.
+- **Uyarı:** Geçerli seri numarası olmayan bir modül varsa her yönetim paneli sayfasında kapatılamayan bir bildirim çıkar. Bildirim Lisanslar sayfasına ve seri numaralarınıza bağlantı verir. Müşteriler bu bildirimi görmez.
 
-CurrencyRates gibi ücretli modüller bu modüle bağlıdır.
+Tüm ücretli MageBooster modülleri bu modüle bağlıdır.
 
 ## Gereksinimler
 
@@ -55,42 +55,73 @@ bin/magento cache:flush
 
 ## Yönetim paneli ayarları
 
-Ayarlar **Stores > Configuration > MageBooster > Licenses** sayfasında, **Serial numbers** grubundadır. Sayfayı açabilmek için yönetici kullanıcının `MageBooster_License::config` yetkisi olmalıdır.
+Ayarlar **Stores > Configuration > MageBooster > Licenses** sayfasındadır. Sayfayı açabilmek için yönetici kullanıcının `MageBooster_License::config` yetkisi olmalıdır.
 
-| Alan | Ayar yolu | Açıklama |
-|---|---|---|
-| Currency Rates (TCMB) | `magebooster_license/serials/currency_rates` | CurrencyRates modülünün seri numarası. `MB1` ile başlar. |
-| MageBooster Checkout Pro | `magebooster_license/serials/checkout_pro` | Checkout modülünün seri numarası. `MB1` ile başlar. |
+**License status** tablosu kurulu tüm ücretli MageBooster modüllerini listeler:
 
-Her alanın altında o seri numarasının güncel durumu yazar. Ekrandaki mesajlar İngilizcedir:
+| Durum | Anlamı |
+|---|---|
+| Etkin | Modülü geçerli bir seri numarası kapsıyor. |
+| Ek süre | Henüz geçerli seri numarası yok. Modül çalışmaya devam eder; ayrıntı sütununda nedeni ve kalan gün sayısı yazar. |
+| Kapalı | 30 günlük ek süre bitti. Modülün ücretli işlevi durdu; mağaza çalışmaya devam eder. |
 
-| Durum | Ekrandaki mesaj | Ürün çalışır mı? |
-|---|---|---|
-| valid | Valid until <tarih> | Evet |
-| grace | Süresi doldu, ek süre içinde (uyarıyla) | Evet, 14 gün |
-| missing | Enter your serial number. | Hayır |
-| invalid | The serial number is not valid. | Hayır |
-| expired | Süresi doldu, ek süre de bitti | Hayır |
-| wrong_product | This serial number is for another MageBooster product. | Hayır |
-| wrong_domain | The serial number does not cover the domain <alan adı> | Hayır |
+**Serial numbers** grubunda kurulu her modül için bir alan, Hyvä sürümü için de ayrı bir alan vardır (örneğin **Moka United payments** ve **Moka United payments (Hyvä edition)**). Satın aldığınız sürümün alanını doldurun. Ayar yolu: `magebooster_license/serials/<kod>`, örneğin `magebooster_license/serials/moka` ve `magebooster_license/serials/moka_hyva`.
+
+Geçerli seri numarası olmayan bir modül için gösterilen neden şunlardan biridir:
+
+| Neden | Mesaj |
+|---|---|
+| missing | Seri numarası girilmemiş. |
+| invalid | Seri numarası geçerli değil. |
+| expired | Seri numarasının süresi <tarih> tarihinde doldu. |
+| wrong_product | Bu seri numarası başka bir MageBooster ürünü için. |
+| wrong_domain | Bu seri numarası <alan adı> alan adını kapsamıyor. |
+
+### Ek süre ve yönetim paneli bildirimi
+
+- Geçerli seri numarası yoksa modül **30 gün** çalışmaya devam eder. 30 gün, License modülü bu modülü geçerli seri numarası olmadan ilk gördüğü anda başlar ve her modül için ayrı tutulur.
+- Ek süre kendiliğinden yeniden başlamaz. Geçerli bir seri numarası girilince ek süre biter; bu seri numarası sonradan geçersiz olursa (örneğin süresi dolarsa) yeni bir 30 günlük süre başlar.
+- Ek süre boyunca ve sonrasında her yönetim paneli sayfasında kapatılamayan bir sistem mesajı görünür. Mesajda etkilenen her modül, nedeni ve "X gün daha çalışmaya devam eder" ya da "<tarih> tarihinden beri kapalı" bilgisi yazar. Mesaj Lisanslar sayfasına ve https://store.magebooster.com/licences/account/ adresine bağlantı verir.
+- Müşteriler mağazada hiçbir lisans mesajı görmez.
+- "Kapalı" durumunun her modülde ne anlama geldiği o modülün kılavuzunda yazar. Mağaza hiçbir zaman bozulmaz: ödeme yöntemleri gizlenir, MageBooster Checkout standart ödeme sayfasına döner ve benzeri.
+
+Komut satırında `bin/magento magebooster:license:status` aynı durum tablosunu gösterir.
 
 ## Seri numarası girme
 
 1. Seri numarasını MageBooster sipariş e-postanızdan kopyalayın. Biçimi `MB1.xxxxx.yyyyy` şeklindedir.
-2. Numarayı ilgili alana yapıştırın.
+2. Numarayı o modülün (ya da Hyvä sürümünün) alanına yapıştırın.
 3. **Save Config** düğmesine tıklayın.
-4. Alanın altındaki durum satırını kontrol edin.
+4. **License status** tablosunda modülün **Etkin** göründüğünü kontrol edin.
 
 ## Geliştiriciler için
 
-Kendi kodunuzdan lisans durumunu sormak için `MageBooster\License\Api\LicenseInterface` arayüzünü enjekte edin:
+Kendi kodunuzdan bir modülün lisans durumunu sormak için `MageBooster\License\Api\LicenseInterface` arayüzünü enjekte edin:
 
 ```php
-$this->license->isValid('currency-rates'); // valid veya grace ise true
-$this->license->getStatus('currency-rates'); // durum nesnesi
+$this->license->isActive('moka');        // lisanslıysa ya da ek süre sürüyorsa true
+$state = $this->license->getModuleState('moka');
+$state->isValid();      // geçerli bir seri numarası var
+$state->isInGrace();    // geçerli seri numarası yok, ek süre sürüyor
+$state->getDaysLeft();  // ek sürede kalan gün
+$state->getStatus();    // seri numarası kontrolünün sonucu (kod ve mesaj)
 ```
 
-Yeni bir ürün kodu tanımlamak için kendi modülünüzün `di.xml` dosyasında `MageBooster\License\Model\Products` sınıfının `products` argümanına bir kayıt ekleyin.
+Arayüzdeki `isValid()` eski modüller için korunur ve artık `isActive()` ile aynı sonucu verir.
+
+Bir modülü tanımlamak için kendi modülünüzün `di.xml` dosyasında `MageBooster\License\Model\Products` sınıfının `products` argümanına bir kayıt ekleyin. Kaydın adı modül kodudur; `codes` hangi ürün kodlarının seri numaralarının kabul edileceğini listeler (Hyvä sürümünün kodu temel modülde de kabul edilir):
+
+```xml
+<item name="moka" xsi:type="array">
+    <item name="label" xsi:type="string">Moka United payments</item>
+    <item name="codes" xsi:type="array">
+        <item name="moka" xsi:type="string">moka</item>
+        <item name="moka-hyva" xsi:type="string">moka-hyva</item>
+    </item>
+</item>
+```
+
+Ek sürenin başlangıç tarihleri `flag` tablosunda, `magebooster_license_grace` kodlu kayıtta tutulur (JSON, modül kodu => UTC başlangıç zamanı).
 
 Seri numarasının yapısı `MB1.<base64url veri>.<base64url imza>` şeklindedir. Veri kısmı bir JSON nesnesidir:
 
@@ -101,15 +132,16 @@ Seri numarasının yapısı `MB1.<base64url veri>.<base64url imza>` şeklindedir
 
 ## Test
 
-1. Seri alanını boş bırakıp kaydedin. Durum satırında "Enter your serial number." yazmalı.
-2. Geçerli bir seri numarası girip kaydedin. Durum satırında "Valid until ..." yazmalı.
-3. `magaza.test` gibi geliştirme adreslerinde alan adı kontrolü atlanır. Alan adı kontrolünü denemek için gerçek bir adres kullanın.
+1. Seri alanını boş bırakıp kaydedin. **License status** tablosunda **Ek süre**, "Seri numarası girilmemiş." ve 30 gün görünmeli; yönetim panelinde bildirim çıkmalı.
+2. Geçerli bir seri numarası girip kaydedin. Durum **Etkin** olmalı ve modül bildirimden kalkmalı.
+3. `bin/magento magebooster:license:status` komutuyla aynı sonucu komut satırında görebilirsiniz.
+4. `magaza.test` gibi geliştirme adreslerinde alan adı kontrolü atlanır. Alan adı kontrolünü denemek için gerçek bir adres kullanın.
 
 ## Sorun giderme
 
 - **"The serial number is not valid."** Numaranın tamamını kopyaladığınızdan emin olun. Başında veya sonunda boşluk, arada satır sonu olmamalı.
 - **"does not cover the domain ..."** Mağaza görünümlerinden birinin base URL'si lisansın kapsamadığı bir alan adında. Her mağaza görünümünün adresini kontrol edin. Gerekirse doğru alan adları için yeni seri numarası alabilirsiniz.
-- **"This serial number is for another MageBooster product."** Numara yanlış alana yapıştırılmış.
+- **"This serial number is for another MageBooster product."** Numara başka bir modülün alanına yapıştırılmış. Her numara kendi alanına girilir; Hyvä paketinin numarası (örneğin moka-hyva) "(Hyvä edition)" ile biten alana yazılır.
 - **`sodium` hatası:** PHP `sodium` eklentisini açın.
 
 ## Kaldırma

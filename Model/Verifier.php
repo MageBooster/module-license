@@ -23,9 +23,10 @@ namespace MageBooster\License\Model;
  */
 class Verifier
 {
-    /** Public key (base64) of the MageBooster serial signing key. Replace with the production key before release. */
+    /** Public key (base64) of the MageBooster production serial signing key. */
     public const PUBLIC_KEY = 'iUPaypR8QVrKmRcutDEhN6hdURJFzzOBTHg7qT1dxCg=';
-    public const GRACE_DAYS = 14;
+    /** @deprecated 1.1.0 No separate expiry grace any more; License applies one 30-day grace period (Model\Grace). */
+    public const GRACE_DAYS = 0;
 
     /**
      * @param string[] $hosts store hosts the serial must cover
@@ -34,7 +35,7 @@ class Verifier
     {
         $serial = trim($serial);
         if ($serial === '') {
-            return new Status(Status::MISSING, (string)__('Enter your serial number.'));
+            return new Status(Status::MISSING, (string)__('No serial number has been entered.'));
         }
         $parts = explode('.', $serial);
         if (count($parts) !== 3 || $parts[0] !== 'MB1') {
@@ -70,13 +71,6 @@ class Verifier
         $endOfDay = $expires->modify('+1 day');
         if ($now < $endOfDay) {
             return new Status(Status::VALID, (string)__('Valid until %1.', $payload['e']), (string)$payload['e']);
-        }
-        if ($now < $endOfDay->modify('+' . self::GRACE_DAYS . ' days')) {
-            return new Status(
-                Status::GRACE,
-                (string)__('The serial number expired on %1. Renew it within %2 days to keep this feature.', $payload['e'], self::GRACE_DAYS),
-                (string)$payload['e']
-            );
         }
         return new Status(Status::EXPIRED, (string)__('The serial number expired on %1.', $payload['e']), (string)$payload['e']);
     }

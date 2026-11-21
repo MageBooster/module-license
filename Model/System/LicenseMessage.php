@@ -15,28 +15,37 @@ declare(strict_types=1);
 namespace MageBooster\License\Model\System;
 
 use MageBooster\License\Api\LicenseInterface;
+use MageBooster\License\Model\ModuleState;
 use MageBooster\License\Model\Products;
-use MageBooster\License\Model\Status;
 use Magento\Framework\Notification\MessageInterface;
-use Magento\Framework\UrlInterface;
 
 /**
- * Admin notice listing paid MageBooster products whose serial is missing, invalid or about to lapse.
+ * System message (top bar of every admin page) for paid MageBooster modules without a valid serial.
+ *
+ * It is shown during the grace period and after it, and goes away only when a valid serial is entered.
+ * Magento offers no close or mark-as-read action for system messages. The text is plain (Magento escapes
+ * it); Plugin\SystemMessagesLinks turns the settings path and the account address into links.
  */
 class LicenseMessage implements MessageInterface
 {
+    public const ACCOUNT_URL = 'https://store.magebooster.com/licences/account/';
+
+    /** @var ModuleState[]|null */
     private ?array $problems = null;
 
     public function __construct(
         private LicenseInterface $license,
-        private Products $products,
-        private UrlInterface $url
+        private Products $products
     ) {
     }
 
     public function getIdentity()
     {
-        return 'magebooster_license_' . hash('sha256', implode('|', array_keys($this->getProblems())));
+        $keys = [];
+        foreach ($this->getProblems() as $state) {
+            $keys[] = $state->getModule() . ':' . ($state->isDisabled() ? 'off' : 'grace');
+        }
+        return 'magebooster_license_' . hash('sha256', implode('|', $keys));
     }
 
     public function isDisplayed()
@@ -46,33 +55,54 @@ class LicenseMessage implements MessageInterface
 
     public function getText()
     {
-        $lines = [];
-        foreach ($this->getProblems() as $label => $status) {
-            $lines[] = sprintf('<strong>%s</strong>: %s', htmlspecialchars($label, ENT_QUOTES | ENT_SUBSTITUTE), htmlspecialchars($status->getMessage(), ENT_QUOTES | ENT_SUBSTITUTE));
+        $parts = [];
+        foreach ($this->getProblems() as $state) {
+            $parts[] = self::describe($state);
         }
-        return implode('<br>', $lines) . sprintf(
-            '<br><a href="%s">%s</a>',
-            $this->url->getUrl('adminhtml/system_config/edit', ['section' => 'magebooster_license']),
-            __('Stores > Configuration > MageBooster > Licenses')
-        );
+        return (string)__('MageBooster licenses:') . ' ' . implode(' | ', $parts) . ' '
+            . (string)__(
+                'Enter the serial numbers in %1, or find them at %2',
+                (string)__('Stores > Configuration > MageBooster > Licenses'),
+                self::ACCOUNT_URL
+            );
     }
 
     public function getSeverity()
     {
-        return self::SEVERITY_MAJOR;
+        return self::SEVERITY_CRITICAL;
     }
 
     /**
-     * @return array<string, Status>
+     * One line per module: name, reason, days left or the date it was switched off.
+     */
+    public static function describe(ModuleState $state): string
+    {
+        $text = $state->getLabel() . ': ' . $state->getStatus()->getMessage();
+        if ($state->isValid()) {
+            return $text;
+        }
+        if ($state->isInGrace()) {
+            return $text . ' ' . (string)__('It keeps working for %1 more day(s).', $state->getDaysLeft());
+        }
+        $end = $state->getGraceEnd();
+        return $text . ' ' . (string)__('Switched off since %1.', $end ? $end->format('Y-m-d') : '-');
+    }
+
+    /**
+     * @return ModuleState[]
      */
     private function getProblems(): array
     {
         if ($this->problems === null) {
             $this->problems = [];
-            foreach ($this->products->getAll() as $code => $label) {
-                $status = $this->license->getStatus($code);
-                if ($status->getCode() !== Status::VALID) {
-                    $this->problems[$label] = $status;
+            foreach (array_keys($this->products->getAll()) as $module) {
+                try {
+                    $state = $this->license->getModuleState($module);
+                } catch (\Throwable $e) {
+                    continue;
+                }
+                if (!$state->isValid()) {
+                    $this->problems[] = $state;
                 }
             }
         }

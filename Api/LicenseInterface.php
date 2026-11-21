@@ -14,14 +14,36 @@ declare(strict_types=1);
 
 namespace MageBooster\License\Api;
 
+use MageBooster\License\Model\ModuleState;
 use MageBooster\License\Model\Status;
 
 /**
- * Serial-number check for a paid MageBooster product, e.g. isValid('currency-rates').
+ * Licence check for paid MageBooster modules.
+ *
+ * Modules call isActive('<module code>'): true while a valid serial is entered, or for 30 days after
+ * License first saw the module without one (grace period). After that the module switches its paid
+ * function off in a safe way. The module code is the base code, e.g. 'moka'; the -hyva serial
+ * ('moka-hyva') is accepted as well when the module registers it (see Model\Products).
  */
 interface LicenseInterface
 {
+    /**
+     * Valid serial or still within the grace period.
+     */
+    public function isActive(string $module): bool;
+
+    /**
+     * Full state (serial status, grace start and end) of a registered module.
+     */
+    public function getModuleState(string $module): ModuleState;
+
+    /**
+     * @deprecated 1.1.0 Use isActive(). Kept for modules built against 1.0; follows the same grace rules.
+     */
     public function isValid(string $product): bool;
 
+    /**
+     * Serial check of one product code only (no grace period).
+     */
     public function getStatus(string $product): Status;
 }

@@ -31,8 +31,21 @@ class Status
     public function __construct(
         private string $code,
         private string $message,
-        private ?string $expires = null
+        private ?string $expires = null,
+        private ?string $updatesUntil = null
     ) {
+    }
+
+    /** Perpetual (one-time purchase) licence: the module keeps working, only updates and support expire. */
+    public function isPerpetual(): bool
+    {
+        return $this->expires === Verifier::PERPETUAL;
+    }
+
+    /** Last day (YYYY-MM-DD) of included updates and support, or null when the serial does not say. */
+    public function getUpdatesUntil(): ?string
+    {
+        return $this->updatesUntil;
     }
 
     public function getCode(): string

@@ -5,6 +5,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-11-21
+
+### Added
+- Perpetual licences for one-time purchases: serials with expiry `9999-12-31` never stop the module.
+- Optional `u` field in the serial: end date of included updates and support. The status message shows it
+  ("Updates and support until ..."); after that date the module keeps working and the customer is asked to renew.
+- `Status::isPerpetual()` and `Status::getUpdatesUntil()`.
+
 ## [1.1.0] - 2026-11-21
 
 ### Added

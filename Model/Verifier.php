@@ -18,7 +18,9 @@ namespace MageBooster\License\Model;
  * Offline serial verification.
  *
  * Serial format: MB1.<base64url(payload JSON)>.<base64url(Ed25519 signature of "MB1." . payload part)>
- * Payload: {"p": product code, "d": [domains, "*.example.com" allowed], "e": "YYYY-MM-DD" expiry, "i": issued date}
+ * Payload: {"p": product code, "d": [domains, "*.example.com" allowed], "e": "YYYY-MM-DD" expiry, "i": issued date,
+ *           "u": optional "YYYY-MM-DD" end of updates and support}
+ * One-time purchases use "e": "9999-12-31" (perpetual use); only "u" (updates and support) expires and is renewed yearly.
  * Only the public key ships with the module; serials are issued with the private key, which never leaves MageBooster.
  */
 class Verifier
@@ -27,6 +29,9 @@ class Verifier
     public const PUBLIC_KEY = 'iUPaypR8QVrKmRcutDEhN6hdURJFzzOBTHg7qT1dxCg=';
     /** @deprecated 1.1.0 No separate expiry grace any more; License applies one 30-day grace period (Model\Grace). */
     public const GRACE_DAYS = 0;
+
+    /** Expiry used for perpetual (one-time purchase) serials. */
+    public const PERPETUAL = '9999-12-31';
 
     /**
      * @param string[] $hosts store hosts the serial must cover
@@ -42,7 +47,7 @@ class Verifier
             return new Status(Status::INVALID, (string)__('The serial number is not valid.'));
         }
         $signature = $this->b64urlDecode($parts[2]);
-        $publicKey = base64_decode(self::PUBLIC_KEY, true);
+        $publicKey = base64_decode(static::PUBLIC_KEY, true);
         if ($signature === null || strlen($signature) !== SODIUM_CRYPTO_SIGN_BYTES || $publicKey === false
             || !sodium_crypto_sign_verify_detached($signature, 'MB1.' . $parts[1], $publicKey)) {
             return new Status(Status::INVALID, (string)__('The serial number is not valid.'));
@@ -68,11 +73,24 @@ class Verifier
         if ($expires === false) {
             return new Status(Status::INVALID, (string)__('The serial number is not valid.'));
         }
+        $updates = null;
+        if (isset($payload['u']) && \DateTimeImmutable::createFromFormat('!Y-m-d', (string)$payload['u']) !== false) {
+            $updates = (string)$payload['u'];
+        }
+        if ($payload['e'] === self::PERPETUAL) {
+            $message = (string)__('Perpetual licence.');
+            if ($updates !== null) {
+                $message .= ' ' . ($updates >= $now->format('Y-m-d')
+                    ? (string)__('Updates and support until %1.', $updates)
+                    : (string)__('Updates and support ended on %1. The module keeps working; renew to get new versions and support.', $updates));
+            }
+            return new Status(Status::VALID, $message, self::PERPETUAL, $updates);
+        }
         $endOfDay = $expires->modify('+1 day');
         if ($now < $endOfDay) {
-            return new Status(Status::VALID, (string)__('Valid until %1.', $payload['e']), (string)$payload['e']);
+            return new Status(Status::VALID, (string)__('Valid until %1.', $payload['e']), (string)$payload['e'], $updates);
         }
-        return new Status(Status::EXPIRED, (string)__('The serial number expired on %1.', $payload['e']), (string)$payload['e']);
+        return new Status(Status::EXPIRED, (string)__('The serial number expired on %1.', $payload['e']), (string)$payload['e'], $updates);
     }
 
     /**

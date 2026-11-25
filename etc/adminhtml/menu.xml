@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<!--
+  Copyright (c) 2026 WebWorks 101 OÜ (MageBooster). All rights reserved.
+  Commercial licence, see LICENSE.txt. https://magebooster.com
+  Licensed per serial number for one production installation (one store domain); staging and
+  development copies of that store are allowed. Serial numbers and downloads are tied to the customer.
+  You may modify this code for your own licensed store; keep this notice.
+  Not allowed: copying to other stores, redistributing, reselling, sublicensing, publishing it publicly,
+  removing licence checks or notices, sharing serial numbers. Unauthorised use: the serial number is
+  revoked without refund, updates and support stop, damages and legal action may follow.
+  Estonian law applies; court: Harju County Court (Harju Maakohus).
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Backend:etc/menu.xsd">
+    <menu>
+        <!-- The one top-level "MageBooster" item. Every MageBooster module adds its own entries under this parent.
+             It used to be declared by each module with the id MageBooster_Reports::magebooster; two modules that
+             declared it at the same time stopped the admin ("Two 'add' commands cannot have equal id"). -->
+        <add id="MageBooster_License::magebooster" title="MageBooster" translate="title" module="MageBooster_License" sortOrder="72" resource="MageBooster_License::magebooster"/>
+        <add id="MageBooster_License::group" title="Licenses" translate="title" module="MageBooster_License" sortOrder="900" parent="MageBooster_License::magebooster" resource="MageBooster_License::config"/>
+        <add id="MageBooster_License::serials" title="Serial numbers" translate="title" module="MageBooster_License" sortOrder="10" parent="MageBooster_License::group" action="adminhtml/system_config/edit/section/magebooster_license" resource="MageBooster_License::config"/>
+    </menu>
+</config>

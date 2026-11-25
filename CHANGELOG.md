@@ -5,6 +5,18 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-11-25
+
+### Added
+
+- The top-level admin menu item "MageBooster" (id `MageBooster_License::magebooster`) and its ACL resource now live here. Every MageBooster module adds its own entries under this parent.
+- Menu entry MageBooster > Licenses > Serial numbers (opens the Licenses configuration section).
+- Data patch that moves each role's rule for the old `MageBooster_Reports::magebooster` resource to the new parent (same allow or deny, same place in the rule order), so roles keep their MageBooster menu and entries after the upgrade.
+
+### Fixed
+
+- Two MageBooster modules installed together no longer stop the admin with "Two 'add' commands cannot have equal id (MageBooster_Reports::magebooster)".
+
 ## [1.2.0] - 2026-11-21
 
 ### Added
